@@ -13,7 +13,10 @@ class WixEmailParser extends EmailParser
         return $email->fromAddress === 'no-reply@mystore.wix.com';
     }
 
-    /** @return Sale[] */
+    /**
+     * @param IncomingMail $email
+     * @return Sale[]
+     */
     protected function parseEmail(IncomingMail $email): array
     {
         $domDocument = new \DOMDocument();
@@ -55,7 +58,7 @@ class WixEmailParser extends EmailParser
     {
         $productInfo = $infoNodes->item(2)
             ->textContent;
-        preg_match('/pacote (mensal|anual)/i', $productInfo, $productMatches);
+        preg_match('/pacote (mensal-mc|anual-mc|mensal|anual)/i', $productInfo, $productMatches);
 
         return $productMatches[1];
     }

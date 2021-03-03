@@ -16,12 +16,24 @@ class SaleTest extends TestCase
         new Sale(new Email('email@example.com'), 'invalid');
     }
 
-    public function testCreatingASaleWithAValidProductMustWork()
+    /**
+     * @dataProvider productTypes
+     * @param string $productType
+     */
+    public function testCreatingASaleWithAValidProductMustWork(string $productType)
     {
-        $aSale = new Sale(new Email('email@example.com'), 'mensal');
-        $anotherSale = new Sale(new Email('email@example.com'), 'anual');
+        $sale = new Sale(new Email('email@example.com'), $productType);
 
-        self::assertSame('mensal', $aSale->product);
-        self::assertSame('anual', $anotherSale->product);
+        self::assertSame($productType, $sale->product);
+    }
+
+    public function productTypes(): array
+    {
+        return [
+            ['anual'],
+            ['anual-mc'],
+            ['mensal'],
+            ['mensal-mc'],
+        ];
     }
 }

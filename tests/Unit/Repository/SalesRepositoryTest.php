@@ -71,6 +71,8 @@ class SalesRepositoryTest extends TestCase
                     new Code(3, '3333', new Email('email@example.com')),
                     new Code(4, '4444', new Email('email@example.com')),
                 ],
+                'anual-mc' => [],
+                'mensal-mc' => [],
             ]);
 
         return $codeRepository;
@@ -96,9 +98,12 @@ class SalesRepositoryTest extends TestCase
     {
         $this->expectException(NotEnoughCodesException::class);
         $exceptionMessage = <<<MSG
-        You don't have enough codes for all your sales.
-        Number of annual sales: 2. Number of annual codes available: 2.
-        Number of monthly sales: 2. Number of monthly codes available: 1.
+        Você não possui códigos suficientes para todas as vendas.
+        
+        Número de vendas anual-mc: 0. Número de códigos anual-mc disponíveis: 0
+        Número de vendas mensal-mc: 0. Número de códigos mensal-mc disponíveis: 0
+        Número de vendas anual: 2. Número de códigos anual disponíveis: 2
+        Número de vendas mensal: 2. Número de códigos mensal disponíveis: 1
         MSG;
         $this->expectExceptionMessage($exceptionMessage);
 
@@ -113,6 +118,8 @@ class SalesRepositoryTest extends TestCase
                 'mensal' => [
                     new Code(3, '3333', new Email('email@example.com')),
                 ],
+                'anual-mc' => [],
+                'mensal-mc' => [],
             ]);
         $con = $this->createStub(\PDO::class);
         $salesRepository = new SalesRepository($emailSalesReader, $codeRepository, $con);

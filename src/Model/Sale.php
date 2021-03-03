@@ -26,7 +26,7 @@ class Sale
     private function setProduct(string $product): void
     {
         $productName = trim($product);
-        if (!in_array($productName, ['anual', 'mensal'])) {
+        if (!in_array($productName, ['anual', 'mensal', 'anual-mc', 'mensal-mc'])) {
             throw new \DomainException("$productName is not a valid product");
         }
 

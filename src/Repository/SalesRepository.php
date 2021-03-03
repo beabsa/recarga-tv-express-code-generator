@@ -37,19 +37,38 @@ class SalesRepository
         $monthlySales = array_values(array_filter($salesWithoutCode, function (Sale $sale) {
             return $sale->product === 'mensal';
         }));
-        $grouppedCodes = $this->codeRepository->findUnusedCodes(count($annualSales), count($monthlySales));
-        if (count($annualSales) > count($grouppedCodes['anual']) || count($monthlySales) > count($grouppedCodes['mensal'])) {
+        $annualMcSales = array_values(array_filter($salesWithoutCode, function (Sale $sale) {
+            return $sale->product === 'anual-mc';
+        }));
+        $monthlyMcSales = array_values(array_filter($salesWithoutCode, function (Sale $sale) {
+            return $sale->product === 'mensal-mc';
+        }));
+
+        $groupedCodes = $this->codeRepository->findUnusedCodes([
+            'anual' => $annualSales,
+            'mensal' => $monthlySales,
+            'anual-mc' => $annualMcSales,
+            'mensal-mc' => $monthlyMcSales,
+        ]);
+        if (count($annualSales) > count($groupedCodes['anual'])
+            || count($monthlySales) > count($groupedCodes['mensal'])
+            || count($monthlyMcSales) > count($groupedCodes['mensal-mc'])
+            || count($annualMcSales) > count($groupedCodes['anual-mc'])) {
             throw new NotEnoughCodesException(
+                count($annualMcSales),
+                count($groupedCodes['anual-mc']),
+                count($monthlyMcSales),
+                count($groupedCodes['mensal-mc']),
                 count($annualSales),
-                count($grouppedCodes['anual']),
+                count($groupedCodes['anual']),
                 count($monthlySales),
-                count($grouppedCodes['mensal']),
+                count($groupedCodes['mensal']),
             );
         }
 
         $this->con->beginTransaction();
         try {
-            $this->attachCodesToSales($grouppedCodes, $annualSales, $monthlySales);
+            $this->attachCodesToSales($groupedCodes, $annualSales, $monthlySales, $annualMcSales, $monthlyMcSales);
             $this->con->commit();
         } catch (\PDOException $e) {
             $this->con->rollBack();
@@ -64,17 +83,26 @@ class SalesRepository
      * @param Sale[] $annualSales
      * @param Sale[] $monthlySales
      */
-    private function attachCodesToSales(array $grouppedCodes, array $annualSales, array $monthlySales): void
+    private function attachCodesToSales(array $grouppedCodes, array $annualSales, array $monthlySales, array $annualMcSales, array $monthlyMcSales): void
     {
         foreach ($grouppedCodes['anual'] as $i => $code) {
             $annualSales[$i]->attachCode($code);
             $this->codeRepository->attachCodeToSale($code, $annualSales[$i]);
         }
 
-
         foreach ($grouppedCodes['mensal'] as $i => $code) {
             $monthlySales[$i]->attachCode($code);
             $this->codeRepository->attachCodeToSale($code, $monthlySales[$i]);
+        }
+
+        foreach ($grouppedCodes['anual-mc'] as $i => $code) {
+            $annualMcSales[$i]->attachCode($code);
+            $this->codeRepository->attachCodeToSale($code, $annualMcSales[$i]);
+        }
+
+        foreach ($grouppedCodes['mensal-mc'] as $i => $code) {
+            $monthlyMcSales[$i]->attachCode($code);
+            $this->codeRepository->attachCodeToSale($code, $monthlyMcSales[$i]);
         }
     }
 }

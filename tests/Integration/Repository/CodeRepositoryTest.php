@@ -70,7 +70,7 @@ class CodeRepositoryTest extends TestCase
         $this->insertCode('2222', 'anual');
         $this->insertCode('3333', 'mensal');
         $this->insertCode('4444', 'mensal');
-        $codes = $this->codeRepository->findUnusedCodes(2, 2);
+        $codes = $this->codeRepository->findUnusedCodes(['mensal' => 2, 'anual' => 2]);
 
         self::assertArrayHasKey('anual', $codes);
         self::assertArrayHasKey('mensal', $codes);
@@ -82,9 +82,9 @@ class CodeRepositoryTest extends TestCase
         self::assertSame('4444', $codes['mensal'][1]->serial);
     }
 
-    public function testSearchingForUnusedCodesShouldReturnGrouppedEmptyArraysIfTheRepositoryIsEmpty()
+    public function testSearchingForUnusedCodesShouldReturnGroupedEmptyArraysIfTheRepositoryIsEmpty()
     {
-        $codes = $this->codeRepository->findUnusedCodes(1, 1);
+        $codes = $this->codeRepository->findUnusedCodes(['anual' => 1, 'mensal' => 1]);
 
         self::assertCount(0, $codes['anual']);
         self::assertCount(0, $codes['mensal']);

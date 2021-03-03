@@ -69,4 +69,25 @@ class WixEmailParserTest extends TestCase
             $this->assertEquals('email@example.com', $sale->costumerEmail);
         }
     }
+
+    public function testShouldParseCorrectlyASaleFromWixEmailWithAnualMcProductType()
+    {
+        // arrange
+        $emailBody = file_get_contents(__DIR__ . '/../../data/email-from-wix-with-anual-mc-product.html');
+        $parser = new WixEmailParser();
+
+        $incomingMailMock = $this->createStub(IncomingMail::class);
+        $incomingMailMock->fromAddress = 'no-reply@mystore.wix.com';
+        $incomingMailMock->method('__get')
+            ->willReturn($emailBody);
+
+        // act
+        $sales = $parser->parse($incomingMailMock);
+
+        // assert
+        $this->assertCount(1, $sales);
+        $this->assertInstanceOf(Sale::class, $sales[0]);
+        $this->assertSame('anual-mc', $sales[0]->product);
+        $this->assertEquals('email@example.com', $sales[0]->costumerEmail);
+    }
 }

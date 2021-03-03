@@ -26,7 +26,7 @@ class CodeRepository
         return $stm->execute();
     }
 
-    public function findNumberOfAvailableCodes()
+    public function findNumberOfAvailableCodes(): array
     {
         $sql = 'SELECT product, COUNT(id) AS total FROM serial_codes WHERE user_email IS NULL GROUP BY product;';
         $stm = $this->con->query($sql);
@@ -34,28 +34,43 @@ class CodeRepository
         return $stm->fetchAll(PDO::FETCH_KEY_PAIR);
     }
 
-    public function findUnusedCodes(int $numberOfAnnualSales, int $numberOfMonthlySales)
+    /**
+     * @param array<string, int> $numberOfSales
+     * @return array[]
+     */
+    public function findUnusedCodes(array $numberOfSales): array
     {
-        $stmt = $this->con->prepare("
-        SELECT * FROM (SELECT product, id, serial FROM serial_codes WHERE user_email IS NULL AND product = 'anual' LIMIT :annual) AS anual
-        UNION
-        SELECT * FROM (SELECT product, id, serial FROM serial_codes WHERE user_email IS NULL AND product = 'mensal' LIMIT :monthly) AS mensal;
-        ");
-        $stmt->bindValue(':annual', $numberOfAnnualSales, PDO::PARAM_INT);
-        $stmt->bindValue(':monthly', $numberOfMonthlySales, PDO::PARAM_INT);
-        $stmt->execute();
+        $queries = [];
+        foreach ($numberOfSales as $product => $number) {
+            $escapedProduct = $this->con->quote($product);
+            $queries[] = <<<SQL
+            SELECT * FROM (
+                SELECT product, id, serial
+                  FROM serial_codes
+                 WHERE user_email IS NULL
+                   AND product = $escapedProduct
+                 LIMIT :$product
+            ) AS $product
+            SQL;
 
-        $grouppedCodes = $stmt->fetchAll(\PDO::FETCH_GROUP);
-        $grouppedSerialCodes = [
+        }
+
+        $stmt = $this->con->prepare(implode(' UNION ', $queries));
+        $stmt->execute($numberOfSales);
+
+        $groupedCodes = $stmt->fetchAll(\PDO::FETCH_GROUP);
+        $groupedSerialCodes = [
             'anual' => [],
             'mensal' => [],
+            'anual-mc' => [],
+            'mensal-mc' => [],
         ];
-        foreach ($grouppedCodes as $product => $codes) {
-            $grouppedSerialCodes[$product] = array_map(function (array $code) {
+        foreach ($groupedCodes as $product => $codes) {
+            $groupedSerialCodes[$product] = array_map(function (array $code) {
                 return new Code($code['id'], $code['serial']);
             }, $codes);
         }
 
-        return $grouppedSerialCodes;
+        return $groupedSerialCodes;
     }
 }

@@ -14,7 +14,7 @@ use PHPUnit\Framework\TestCase;
  */
 class SalesFinderTest extends TestCase
 {
-    public function testSalesFinderShouldReturnEmptyArrayWhenNoParseableEmailIsFound()
+    public function testSalesFinderShouldReturnEmptyArrayWhenNoParsableEmailIsFound()
     {
         $incomingMail = $this->createStub(IncomingMail::class);
         $incomingMail->fromAddress = 'info@mercadopago.com';
@@ -35,23 +35,9 @@ class SalesFinderTest extends TestCase
     /**
      * @todo Implement tests for WixEmailParser
      */
-    public function testSalesFinderShouldOnlyReturnSalesFromParseableEmails()
+    public function testSalesFinderShouldOnlyReturnSalesFromParsableEmails()
     {
         // arrange
-
-        // valid mercado pago e-mail
-        $incomingMailMock1 = $this->createStub(IncomingMail::class);
-        $incomingMailMock1->subject = 'Você recebeu um pagamento por P 2';
-        $incomingMailMock1->fromAddress = 'info@mercadopago.com';
-        $incomingMailMock1->method('__get')
-            ->willReturn(file_get_contents(__DIR__ . '/../../data/email-without-phone.html'));
-
-        // valid paypal e-mail
-        $incomingMailMock2 = $this->createStub(IncomingMail::class);
-        $incomingMailMock2->subject = 'Item nº 12345';
-        $incomingMailMock2->fromAddress = 'service@paypal.com.br';
-        $incomingMailMock2->method('__get')
-            ->willReturn(file_get_contents(__DIR__ . '/../../data/email-with-payment-from-paypal.html'));
 
         // invalid e-mail
         $incomingMailMock3 = $this->createStub(IncomingMail::class);
@@ -65,7 +51,7 @@ class SalesFinderTest extends TestCase
         $incomingMailMock4->method('__get')
             ->willReturn(file_get_contents(__DIR__ . '/../../data/email-from-wix.html'));
 
-        // valid wix e-mail with 2 sales
+        // valid wix e-mail with 3 sales
         $incomingMailMock5 = $this->createStub(IncomingMail::class);
         $incomingMailMock5->subject = 'ÓTIMO! VOCÊ ACABOU DE RECEBER UM PEDIDO (#10001)';
         $incomingMailMock5->fromAddress = 'no-reply@mystore.wix.com';
@@ -73,10 +59,8 @@ class SalesFinderTest extends TestCase
             ->willReturn(file_get_contents(__DIR__ . '/../../data/email-from-wix-with-three-sales.html'));
 
         $mailbox = $this->createStub(Mailbox::class);
-        $mailbox->method('searchMailbox')->willReturn([1, 2, 3, 4, 5]);
+        $mailbox->method('searchMailbox')->willReturn([1, 2, 3]);
         $mailbox->method('getMail')->willReturnOnConsecutiveCalls(
-            $incomingMailMock1,
-            $incomingMailMock2,
             $incomingMailMock3,
             $incomingMailMock4,
             $incomingMailMock5,
