@@ -12,9 +12,8 @@ $container = require_once __DIR__ . '/config/dependencies.php';
 $codeRepository = $container->get(CodeRepository::class);
 $codes = $codeRepository->findNumberOfAvailableCodes();
 
-$monthCount = $codes['mensal'] ?? 0;
-$yearCount = $codes['anual'] ?? 0;
-
-if ($monthCount < 30 || $yearCount < 15) {
-    $container->get(CodesCountWarningSender::class)->sendWarning($monthCount, $yearCount);
+foreach ($codes as $codesForProduct) {
+    if ($codesForProduct < 10) {
+        $container->get(CodesCountWarningSender::class)->sendWarning($codes);
+    }
 }

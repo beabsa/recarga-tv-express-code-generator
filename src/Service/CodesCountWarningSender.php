@@ -15,16 +15,18 @@ class CodesCountWarningSender
         $this->mailer = $mailer;
     }
 
-    public function sendWarning(int $monthCount, int $yearCount): void
+    public function sendWarning(array $codeCount): void
     {
-        $emailBody = "Códigos mensais disponíveis: $monthCount\nCódigos anuais disponíveis: $yearCount";
-
+        $emailBody = "Códigos disponíveis:\n";
+        foreach ($codeCount as $product => $count) {
+            $emailBody .= "$product: $count\n";
+        }
 
         $email = (new Email())
             ->from('wolneidias@gmail.com')
             ->to('wolneidias@gmail.com')
             ->subject('Códigos acabando!')
-            ->priority(5)
+            ->priority(1)
             ->text($emailBody);
         $this->mailer->send($email);
     }
